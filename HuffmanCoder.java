@@ -1,98 +1,103 @@
-import java.util.ArrayList;
+import java.util.*;
 
-public class Heap<T extends Comparable<T>>{
+class HuffmanCoder {
+  HashMap<Character, String> encoder;
+  HashMap<String, Character> decoder;
 
-    private ArrayList<T> list;
+  private class Node implements Comparable<Node> {
+    Character data;
+    int cost; // frequency
+    Node left;
+    Node right;
 
-    public Heap(){
-        list = new ArrayList<>();
+    public Node(Character data, int cost) {
+      this.data = data;
+      this.cost = cost;
+      this.left = null;
+      this.right = null;
     }
 
-    public void insert(T value){
-        list.add(value);
-        upheap(list.size() - 1);
+    @Override
+    public int compareTo(Node other) {
+      return this.cost - other.cost;
     }
-    public int size(){
-        return list.size();
-    }
-    private void upheap(int index){
+  }
 
-        if(index == 0){
-            return;
-        }
+  public HuffmanCoder(String feeder) throws Exception {
+    HashMap<Character, Integer> fmap = new HashMap<>();
 
-        int p = parent(index);
-
-        if(list.get(index).compareTo(list.get(p)) < 0){
-            swap(index, p);
-            upheap(p);
-        }
-    }
-
-    public T remove() throws Exception{
-        if(list.isEmpty()){
-            throw new Exception("Removing from empty Heap");
-        }
-        T temp = list.get(0);
-
-        T last = list.remove(list.size() - 1);
-
-        if(!list.isEmpty()){
-            list.set(0, last);
-
-            downheap(0);
-        }
-        return temp;
+    for(int i=0; i < feeder.length(); i++) {
+      char cc = feeder.charAt(i);
+      if(fmap.containsKey(cc)) {
+        int ov = fmap.get(cc);
+        ov += 1;
+        fmap.put(cc, ov);
+      } else {
+        fmap.put(cc, 1);
+      }
     }
 
-    private void downheap(int index) {
+    Heap<Node> minHeap = new Heap<>();
+    Set<Map.Entry<Character, Integer>> entrySet = fmap.entrySet();
 
-        int min = index;
-        int left = left(index);
-        int right = right(index);
-
-        // check is left < min
-        if(left < list.size() && list.get(min).compareTo(list.get(left)) > 0){
-            min = left;
-        }
-        // check if right < min
-        if(right < list.size() && list.get(min).compareTo(list.get(right)) > 0){
-            min = right;
-        }
-
-        if(min != index){
-            swap(min, index);
-
-            downheap(min);
-        }
+    for(Map.Entry<Character, Integer> entry : entrySet) {
+      Node node = new Node(entry.getKey(), entry.getValue());
+      minHeap.insert(node);
     }
 
-    private void swap(int first, int second) {
-        T temp = list.get(first);
-        list.set(first, list.get(second));
-        list.set(second, temp);
+    while(minHeap.size() != 1) {
+      Node first = minHeap.remove();
+      Node second = minHeap.remove();
+
+      Node newNode = new Node('\0', first.cost + second.cost);
+      newNode.left = first;
+      newNode.right = second;
+
+      minHeap.insert(newNode);
     }
 
-    private int parent(int index){
-        return (index - 1) / 2;
+    Node ft = minHeap.remove();
+
+    this.encoder = new HashMap<>();
+    this.decoder = new HashMap<>();
+
+    this.initEncoderDecoder(ft, "");
+  }
+
+  private void initEncoderDecoder(Node node, String osf) {
+    if(node == null) {
+      return;
     }
-
-    private int left(int index){
-        return index * 2 + 1;
+    if(node.left == null && node.right == null) {
+      this.encoder.put(node.data, osf);
+      this.decoder.put(osf, node.data);
     }
+    initEncoderDecoder(node.left, osf+"0");
+    initEncoderDecoder(node.right, osf+"1");
+  }
 
-    private int right(int index){
-        return index * 2 + 2;
+  public String encode(String source) {
+    String ans = "";
+
+    // Bitset can be used: like an array but with a bit at each index
+
+    for(int i=0; i<source.length(); i++) {
+      ans = ans + encoder.get(source.charAt(i));
     }
+    
+    return ans;
+  }
 
-    public ArrayList<T> heapSort() throws Exception {
-
-        ArrayList<T> data = new ArrayList<>();
-
-        while(!list.isEmpty()){
-            data.add(this.remove());
-        }
-        return data;
+  public String decode(String codedString) {
+    String key = "";
+    String ans = "";
+    for(int i=0; i<codedString.length(); i++) {
+      key = key + codedString.charAt(i);
+      if(decoder.containsKey(key)) {
+        ans = ans + decoder.get(key);
+        key = "";
+      }
     }
-
+    return ans;
+  }
 }
