@@ -1,5 +1,8 @@
 class Main {
   public static void main(String[] args) throws Exception{
+    // Scanner myObj = new Scanner(System.in);
+    // // String input
+    // String name = myObj.nextLine();
     String str = "abbccda";
       HuffmanCoder hf = new HuffmanCoder(str);
     String cs = hf.encode(str);
